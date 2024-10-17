@@ -23,7 +23,7 @@ This project performs hypothesis testing on earthquake data to analyze patterns 
 
 1. Clone the repository:
     ```sh
-    git clone https://github.com/stilxam/mm-analysis.git
+    git clone https://github.com/stilxam/mm.git
     cd mm
     ```
 
