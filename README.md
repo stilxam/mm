@@ -12,7 +12,7 @@ This project performs hypothesis testing on earthquake data to analyze patterns 
 
 ## Requirements
 
-- Python 3.x
+- Python 3.10
 - Jupyter Notebook
 - pandas
 - numpy
