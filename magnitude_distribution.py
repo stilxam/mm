@@ -93,12 +93,14 @@ def analyze_distributions(magnitude_series: pd.Series, significance_level: float
     return results, output_parameters
 
 
-def generate_qq_plot(in_series: pd.Series, output_parameters: Dict[str, Dict[str, float]], case: str) -> None:
+def generate_qq_plot(in_series: pd.Series, output_parameters: Dict[str, Dict[str, float]], case: str,
+                               title: str) -> None:
     """
     Generate a Q-Q plot of the data against the fitted distribution.
     :param in_series: input time series data
     :param output_parameters: parameters of the fitted distributions
     :param case: A string representing the case of earthquakes to analyze.
+    :param title: A string representing the title of the plot.
     :return:
     """
 
@@ -120,18 +122,23 @@ def generate_qq_plot(in_series: pd.Series, output_parameters: Dict[str, Dict[str
         ax[i].set_xlabel(f"Theoretical Quantiles ({names[i]})")
         ax[i].set_ylabel(f"Sample Quantiles")
 
-    plt.suptitle(f"Q-Q Plot of Eaurthquake {case} vs Theoretical Distributions", fontsize=16)
+    plt.suptitle(
+        f"{title}",
+        fontsize=16
+    )
     save_fig(fig, f"qq_plot_{case}")
     plt.show()
 
 
-def overlay_distribution_plot(in_series: pd.Series, output_parameters: Dict[str, Dict[str, float]], case: str) -> None:
+def overlay_distribution_plot(in_series: pd.Series, output_parameters: Dict[str, Dict[str, float]], case: str,
+                                        title: str) -> None:
     """
     Overlay the distribution plots of the fitted distributions and the data.
 
     :param in_series: A pandas Series of time differences.
     :param output_parameters: A dictionary of output parameters for the fitted distributions.
     :param case: A string representing the case of earthquakes to analyze.
+    :param title: A string representing the title of the plot.
     :return: None
     """
     n = len(in_series)
@@ -158,10 +165,10 @@ def overlay_distribution_plot(in_series: pd.Series, output_parameters: Dict[str,
         ax[i].set_ylabel("Frequency")
 
     fig.suptitle(
-        f"Overlay of the Distribution Earthquake {case} with Theoretical Distributions  ",
+        f"{title}",
         fontsize=16)
 
-    save_fig(fig, f"overlay_dist_{case}")
+    save_fig(fig, f"overlay_magnitude_dist_{case}")
     plt.show()
 
 
@@ -191,7 +198,7 @@ def big_magnitude_probability(distribution_type: str, max_magnitude: float,
         return -1
 
 
-def magnitude_analysis(earthquake_data: pd.DataFrame, threshold_magnitude: float = 5) -> None:
+def magnitude_analysis(earthquake_data: pd.DataFrame, threshold_magnitude: float = 5) -> Tuple[str, Dict[str, float]]:
     """
      Analyze the magnitude data and determine the best fit distribution and the probability of a large earthquake.
 
@@ -205,12 +212,17 @@ def magnitude_analysis(earthquake_data: pd.DataFrame, threshold_magnitude: float
     best_fit_distribution = results[best_fit_index]
     probability = big_magnitude_probability(best_fit_distribution[0], threshold_magnitude, distribution_params)
 
-    print(f"The best fit distribution for the magnitude of the earthquakes is {best_fit_distribution[0]} with a p-value of {best_fit_distribution[2]}")
+    print(
+        f"The best fit distribution for the magnitude of the earthquakes is {best_fit_distribution[0]} with a p-value of {best_fit_distribution[2]}")
     print(f"The estimated parameters are: {distribution_params[best_fit_distribution[0]]}")
     print(f"The probability of a large earthquake occurring is {probability}")
 
-    generate_qq_plot(earthquake_data["mag"], distribution_params, "Magnitude")
-    overlay_distribution_plot(earthquake_data["mag"], distribution_params, "Magnitude")
+    qq_mag_title = f"Q-Q Plot of Earthquake Magnitude vs Theoretical Distributions"
+    ov_mag_title = f"Overlay of the Distribution Earthquake Magnitude with Theoretical Distributions  "
+    generate_qq_plot(earthquake_data["mag"], distribution_params, "Magnitude", qq_mag_title)
+    overlay_distribution_plot(earthquake_data["mag"], distribution_params, "Magnitude", ov_mag_title)
+
+    return best_fit_distribution[0], distribution_params[best_fit_distribution[0]]
 
 
 if __name__ == "__main__":
