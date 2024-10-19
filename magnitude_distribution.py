@@ -2,6 +2,23 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 from typing import Tuple, List, Dict, Any
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+
+
+def save_fig(fig, name) -> None:
+    """
+    Save the figure to the specified path.
+
+    :param name: A string representing the name of the figure.
+    :param fig: A matplotlib figure object.
+    :return: None
+    """
+    cwd = Path.cwd()
+    path = cwd / "figures" / f"{name}.png"
+    if not path.parent.exists(): path.parent.mkdir(parents=True)
+    fig.savefig(path)
 
 
 def analyze_distributions(magnitude_series: pd.Series, significance_level: float = 0.05) -> Tuple[
@@ -76,6 +93,78 @@ def analyze_distributions(magnitude_series: pd.Series, significance_level: float
     return results, output_parameters
 
 
+def generate_qq_plot(in_series: pd.Series, output_parameters: Dict[str, Dict[str, float]], case: str) -> None:
+    """
+    Generate a Q-Q plot of the data against the fitted distribution.
+    :param in_series: input time series data
+    :param output_parameters: parameters of the fitted distributions
+    :param case: A string representing the case of earthquakes to analyze.
+    :return:
+    """
+
+    uniform_dist = stats.uniform(loc=output_parameters["Uniform Distribution"]["loc"],
+                                 scale=output_parameters["Uniform Distribution"]["scale"])
+    exp_dist = stats.expon(scale=1 / output_parameters["Exponential Distribution"]["estimated_lambda"])
+    gamma_dist = stats.gamma(a=output_parameters["Gamma Distribution"]["estimated_alpha"],
+                             scale=1 / output_parameters["Gamma Distribution"]["estimated_beta"])
+    poisson_dist = stats.poisson(mu=output_parameters["Poisson Distribution"]["estimated_lambda"])
+    normal_dist = stats.norm(loc=output_parameters["Normal Distribution"]["estimated_mean"],
+                             scale=output_parameters["Normal Distribution"]["estimated_std"])
+
+    distributions = [exp_dist, gamma_dist, normal_dist, poisson_dist, uniform_dist]
+    names = ["Exponential", "Gamma", "Normal", "Poisson", "Uniform"]
+    fig, ax = plt.subplots(nrows=len(distributions), ncols=1, figsize=(10, 5 * (len(distributions) + 1)))
+    for i, dist in enumerate(distributions):
+        stats.probplot(in_series, dist=dist, plot=ax[i])
+        ax[i].set_title(f"Q-Q Plot of {names[i]}")
+        ax[i].set_xlabel(f"Theoretical Quantiles ({names[i]})")
+        ax[i].set_ylabel(f"Sample Quantiles")
+
+    plt.suptitle(f"Q-Q Plot of Eaurthquake {case} vs Theoretical Distributions", fontsize=16)
+    save_fig(fig, f"qq_plot_{case}")
+    plt.show()
+
+
+def overlay_distribution_plot(in_series: pd.Series, output_parameters: Dict[str, Dict[str, float]], case: str) -> None:
+    """
+    Overlay the distribution plots of the fitted distributions and the data.
+
+    :param in_series: A pandas Series of time differences.
+    :param output_parameters: A dictionary of output parameters for the fitted distributions.
+    :param case: A string representing the case of earthquakes to analyze.
+    :return: None
+    """
+    n = len(in_series)
+    exp_dist = np.random.exponential(output_parameters["Exponential Distribution"]["estimated_lambda"], n)
+    gamma_dist = np.random.gamma(output_parameters["Gamma Distribution"]["estimated_alpha"],
+                                 1 / output_parameters["Gamma Distribution"]["estimated_beta"], n)
+    normal_dist = np.random.normal(output_parameters["Normal Distribution"]["estimated_mean"],
+                                   output_parameters["Normal Distribution"]["estimated_std"], n)
+    poisson_dist = np.random.poisson(output_parameters["Poisson Distribution"]["estimated_lambda"], n)
+    uniform_dist = np.random.uniform(output_parameters["Uniform Distribution"]["loc"],
+                                     output_parameters["Uniform Distribution"]["scale"], n)
+
+    distributions = [exp_dist, gamma_dist, normal_dist, poisson_dist, uniform_dist]
+    names = ["Exponential", "Gamma", "Normal", "Poisson", "Uniform"]
+
+    fig, ax = plt.subplots(nrows=5, ncols=1, figsize=(10, 25))
+
+    for i, dist in enumerate(distributions):
+        sns.histplot(dist, kde=True, ax=ax[i])
+        sns.histplot(in_series, kde=True, ax=ax[i])
+        ax[i].legend(["Fitted Distribution", "Data"])
+        ax[i].set_title(f"{names[i]} Distribution")
+        ax[i].set_xlabel("Time Difference")
+        ax[i].set_ylabel("Frequency")
+
+    fig.suptitle(
+        f"Overlay of the Distribution Earthquake {case} with Theoretical Distributions  ",
+        fontsize=16)
+
+    save_fig(fig, f"overlay_dist_{case}")
+    plt.show()
+
+
 def big_magnitude_probability(distribution_type: str, max_magnitude: float,
                               distribution_params: Dict[str, Dict[str, float]]) -> float:
     """
@@ -119,6 +208,9 @@ def magnitude_analysis(earthquake_data: pd.DataFrame, threshold_magnitude: float
     print(f"The best fit distribution for the magnitude of the earthquakes is {best_fit_distribution[0]} with a p-value of {best_fit_distribution[2]}")
     print(f"The estimated parameters are: {distribution_params[best_fit_distribution[0]]}")
     print(f"The probability of a large earthquake occurring is {probability}")
+
+    generate_qq_plot(earthquake_data["mag"], distribution_params, "Magnitude")
+    overlay_distribution_plot(earthquake_data["mag"], distribution_params, "Magnitude")
 
 
 if __name__ == "__main__":
