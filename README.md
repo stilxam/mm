@@ -1,8 +1,9 @@
 # mm: Earthquake Analysis Project
 author: "Maxwell Litsios (stilxam)" 
 
-This project performs hypothesis testing on earthquake data to analyze patterns and trends. The analysis is conducted using Python and various data science libraries.
-
+This project performs hypothesis testing on earthquake data to analyze patterns and trends. 
+The Stochastic Simulations were mostly written in Jax for the sake of practicing how to write vmaps more efficiently.
+I understand and am aware that it is not necessarily the most memory efficient approach, however, it was quite fun to write.
 ## Project Structure
 
 - `hypothesis_testing.ipynb`: Jupyter Notebook containing the main analysis and hypothesis testing.
