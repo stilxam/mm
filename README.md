@@ -1,5 +1,5 @@
 # mm: Earthquake Analysis Project
-author: "Maxwell Litsios (stilxam)" and ""
+author: "Maxwell Litsios (stilxam)" 
 
 This project performs hypothesis testing on earthquake data to analyze patterns and trends. The analysis is conducted using Python and various data science libraries.
 
@@ -18,6 +18,7 @@ This project performs hypothesis testing on earthquake data to analyze patterns 
 - numpy
 - matplotlib
 - seaborn
+- jax
 
 ## Installation
 
